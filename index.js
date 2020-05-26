@@ -1,34 +1,29 @@
 const express = require("express");
-const passport = require("passport");
-const GoogleStrategy = require("passport-google-oauth20").Strategy;
-const app = express();
+const mongoose = require("mongoose");
 const keys = require("./config/keys");
+const cookieSession = require("cookie-session");
+const passport = require("passport");
 
-passport.use(
-  new GoogleStrategy(
-    {
-      clientID: keys.googleClientID,
-      clientSecret: keys.googleClientSecret,
-      callbackURL: "/auth/google/callback",
-    },
-    //after authentication successful
-    // access token for doing things on users behalf like reading their mails
-    (accessToken, refreshToken, profile, done) => {
-      console.log(accessToken);
-      console.log(profile);
-    }
-  )
-);
+require("./models/User");
+require("./services/passport");
 
-app.get(
-  "/auth/google",
-  passport.authenticate("google", {
-    scope: ["profile", "email"],
+mongoose.connect(keys.mongoURI, {
+  useNewUrlParser: true,
+  useUnifiedTopology: true,
+});
+const authRoutes = require("./routes/authRoutes");
+const app = express();
+
+app.use(
+  cookieSession({
+    maxAge: 30 * 24 * 60 * 60 * 1000,
+    keys: [keys.cookieKey],
   })
 );
 
-//passport here is taking code send by in url and sending it to take the details
-app.get("/auth/google/callback", passport.authenticate("google"));
+app.use(passport.initialize());
+app.use(passport.session());
 
+authRoutes(app);
 const PORT = process.env.PORT || 5000;
 app.listen(PORT);
