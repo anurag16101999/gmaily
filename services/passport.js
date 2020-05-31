@@ -22,6 +22,7 @@ passport.use(
       clientID: keys.googleClientID,
       clientSecret: keys.googleClientSecret,
       callbackURL: "/auth/google/callback",
+      proxy: true,
     },
     //after authentication successful
     // access token for doing things on users behalf like reading their mails
